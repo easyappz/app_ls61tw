@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -12,3 +13,7 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+if (typeof window !== 'undefined' && typeof window.handleRoutes === 'function') {
+  window.handleRoutes(['/', '/login', '/register', '/profile']);
+}
