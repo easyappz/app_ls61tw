@@ -65,3 +65,24 @@ class MemberToken(models.Model):
 
         # 30 bytes -> 40+ chars when hex-encoded; slice to KEY_LENGTH.
         return secrets.token_hex(20)[: cls.KEY_LENGTH]
+
+
+class ChatMessage(models.Model):
+    """Single message in the global group chat.
+
+    Each message belongs to a Member. No separate rooms are used.
+    """
+
+    member = models.ForeignKey(
+        Member,
+        related_name="messages",
+        on_delete=models.CASCADE,
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"{self.member.username}: {self.text[:50]}"

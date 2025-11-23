@@ -1,13 +1,14 @@
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions, status
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .authentication import MemberTokenAuthentication
-from .models import Member, MemberToken
+from .models import ChatMessage, Member, MemberToken
 from .serializers import (
+    ChatMessageSerializer,
     MemberRegistrationSerializer,
     MemberSerializer,
     MessageSerializer,
@@ -137,3 +138,36 @@ class LogoutView(APIView):
         member = request.user
         MemberToken.objects.filter(member=member).delete()
         return Response({"detail": "Вы успешно вышли."})
+
+
+class ChatMessageListCreateView(generics.ListCreateAPIView):
+    """List and create messages in the global group chat.
+
+    Only authenticated members can view or send messages.
+    Editing and deletion can be added later if required.
+    """
+
+    authentication_classes = [MemberTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatMessageSerializer
+
+    def get_queryset(self):
+        return ChatMessage.objects.select_related("member").order_by("created_at")
+
+    @extend_schema(
+        description="Получить список сообщений группового чата",
+        responses={200: ChatMessageSerializer(many=True)},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Отправить новое сообщение в групповой чат",
+        request=ChatMessageSerializer,
+        responses={201: ChatMessageSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(member=self.request.user)

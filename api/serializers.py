@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
-from .models import Member
+from .models import ChatMessage, Member
 
 
 class MessageSerializer(serializers.Serializer):
@@ -37,3 +37,24 @@ class MemberRegistrationSerializer(serializers.ModelSerializer):
             **validated_data,
         )
         return member
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    """Serializer for chat messages in the global group chat."""
+
+    username = serializers.CharField(
+        source="member.username",
+        read_only=True,
+    )
+    text = serializers.CharField(
+        allow_blank=False,
+        error_messages={
+            "blank": "Текст сообщения не может быть пустым.",
+            "required": "Поле 'text' обязательно.",
+        },
+    )
+
+    class Meta:
+        model = ChatMessage
+        fields = ["id", "text", "created_at", "username"]
+        read_only_fields = ["id", "created_at", "username"]

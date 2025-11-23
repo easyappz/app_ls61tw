@@ -97,6 +97,49 @@ paths:
                 $ref: '#/components/schemas/LogoutResponse'
         '401':
           description: Не авторизован
+  /api/chat/messages/:
+    get:
+      operationId: api_chat_messages_list
+      description: Получить список сообщений группового чата
+      tags:
+      - chat
+      security:
+      - TokenAuth: []
+      responses:
+        '200':
+          description: Список сообщений группового чата
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessage'
+        '401':
+          description: Не авторизован
+    post:
+      operationId: api_chat_messages_create
+      description: Отправить новое сообщение в групповой чат
+      tags:
+      - chat
+      security:
+      - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessageCreateRequest'
+      responses:
+        '201':
+          description: Сообщение создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+        '400':
+          description: Ошибка валидации данных сообщения
+        '401':
+          description: Не авторизован
 components:
   schemas:
     Message:
@@ -157,6 +200,33 @@ components:
           type: string
       required:
       - detail
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        username:
+          type: string
+          description: Имя пользователя, отправившего сообщение
+      required:
+      - id
+      - text
+      - created_at
+      - username
+    ChatMessageCreateRequest:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+      - text
   securitySchemes:
     basicAuth:
       type: http
